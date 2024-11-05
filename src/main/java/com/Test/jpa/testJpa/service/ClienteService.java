@@ -4,6 +4,7 @@ import com.Test.jpa.testJpa.Cliente;
 import com.Test.jpa.testJpa.repository.ClienteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import java.util.Optional;
 
 @Service
 public class ClienteService {
@@ -21,5 +22,10 @@ public class ClienteService {
 
     public Cliente actualizarCliente(Cliente cliente) {
         return clienteRepository.save(cliente);
+    }
+
+
+    public Optional<Cliente> obtenerClientePorId(Long id) {
+        return clienteRepository.findById(id);
     }
 }

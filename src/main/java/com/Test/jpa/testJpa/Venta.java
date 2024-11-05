@@ -11,6 +11,8 @@ public class Venta {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String numeroFactura;
+
     @ManyToOne
     private Cliente cliente;
 
