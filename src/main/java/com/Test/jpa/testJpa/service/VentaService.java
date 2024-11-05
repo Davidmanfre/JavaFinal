@@ -24,7 +24,6 @@ public class VentaService {
     private final ContadorFacturaRepository contadorFacturaRepository;
     private final ClienteService clienteService;
 
-
     @Autowired
     public VentaService(VentaRepository ventaRepository, ProductoService productoService, ContadorFacturaRepository contadorFacturaRepository, ClienteService clienteService) {
         this.ventaRepository = ventaRepository;
@@ -32,25 +31,29 @@ public class VentaService {
         this.contadorFacturaRepository = contadorFacturaRepository;
         this.clienteService = clienteService;
 
+        // Inicializar el contador de facturas si no existe
         if (!contadorFacturaRepository.existsById(1L)) {
             ContadorFactura contadorFactura = new ContadorFactura();
             contadorFactura.setContador(0L);
             contadorFacturaRepository.save(contadorFactura);
         }
     }
+
     public VentaResponseDTO crearVenta(VentaDTO ventaDTO) {
+        // Crear una nueva venta
         Venta venta = new Venta();
         venta.setFecha(new Date());
 
-        // Asignar cliente a la venta
+        // Asignar el cliente a la venta
         venta.setCliente(clienteService.obtenerClientePorId(ventaDTO.getClienteId())
                 .orElseThrow(() -> new RuntimeException("Cliente no encontrado")));
 
-        // Obtener los productos desde los IDs y asignarlos a la venta
+        // Obtener los productos desde los IDs
         List<Producto> productos = ventaDTO.getProductosIds().stream()
                 .map(id -> productoService.obtenerProductoPorId(id)
                 .orElseThrow(() -> new RuntimeException("Producto no encontrado: " + id)))
                 .collect(Collectors.toList());
+
         venta.setProductos(productos);
 
         // Generar el número de factura
@@ -63,15 +66,22 @@ public class VentaService {
 
         // Reducir el stock de los productos y recopilar el stock restante
         List<ProductoStockDTO> stockRestante = new ArrayList<>();
-        productos.forEach(producto -> {
-            productoService.reducirStock(producto.getId(), 1);
+        for (Producto producto : productos) {
+            // Reducir stock en la base de datos
+            productoService.reducirStock(producto.getId(), 1); // Reducir 1 unidad del stock
+
+            // Obtener el producto actualizado
             Producto productoActualizado = productoService.obtenerProductoPorId(producto.getId())
                 .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
-            stockRestante.add(new ProductoStockDTO(productoActualizado.getId(), productoActualizado.getNombre(), productoActualizado.getStock()));
-        });
 
-        // Guardar la venta y devolver respuesta como DTO
+            // Añadir al listado de stock restante
+            stockRestante.add(new ProductoStockDTO(productoActualizado.getId(), productoActualizado.getNombre(), productoActualizado.getStock()));
+        }
+
+        // Guardar la venta en la base de datos
         Venta nuevaVenta = ventaRepository.save(venta);
+
+        // Crear el DTO de respuesta
         VentaResponseDTO responseDTO = new VentaResponseDTO();
         responseDTO.setId(nuevaVenta.getId());
         responseDTO.setNumeroFactura(nuevaVenta.getNumeroFactura());

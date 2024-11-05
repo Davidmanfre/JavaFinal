@@ -5,6 +5,7 @@ import com.Test.jpa.testJpa.repository.ClienteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.Optional;
+import java.util.List;
 
 @Service
 public class ClienteService {
@@ -16,6 +17,9 @@ public class ClienteService {
         this.clienteRepository = clienteRepository;
     }
 
+    public List<Cliente> listarClientes() {
+        return clienteRepository.findAll();  // Este método retorna la lista de todos los clientes
+    }
     public Cliente crearCliente(Cliente cliente) {
         return clienteRepository.save(cliente);
     }
